@@ -1,0 +1,27 @@
+{
+  "license": "MIT",
+  "bin": {
+    "3d2png": "./3d2png.js"
+  },
+  "maintainers": [
+    {
+      "email": "gilles@wikimedia.org",
+      "name": "Gilles Dubuc"
+    }
+  ],
+  "name": "3d2png",
+  "dependencies": {
+    "three": "latest",
+    "gl": "latest",
+    "canvas": "latest",
+    "text-encoding": "latest",
+    "xmldom": "latest",
+    "yargs": "latest"
+  },
+  "readme": "Converts AMD and STL files into PNG thumbnails",
+  "repository": {
+    "type": "git",
+    "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
+  },
+  "version": "0.0.1"
+}

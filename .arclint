@@ -1,0 +1,13 @@
+{
+  "linters": {
+    "jshint": {
+      "type": "jshint",
+      "include": "(\\.js$)",
+      "exclude": "(^AMFLoader.js$)"
+   },
+    "json": {
+      "type": "json",
+      "include": "(\\.json$)"
+    }
+  }
+}
