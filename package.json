@@ -12,7 +12,7 @@
   "name": "3d2png",
   "dependencies": {
     "three": "latest",
-    "gl": "2.1.5",
+    "gl": "latest",
     "canvas": "latest",
     "text-encoding": "latest",
     "xmldom": "latest",
