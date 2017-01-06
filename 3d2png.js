@@ -1,73 +1,75 @@
 #!/usr/bin/env node
 
-var yargs = require( 'yargs' ).argv,
+var Canvas = require( 'canvas' ),
+	THREE = require( 'three' ),
+	GL = require( 'gl' ),
+	ThreeSTLLoader = require( 'three-stl-loader' ),
+	STLLoader = ThreeSTLLoader( THREE ),
 	fs = require( 'fs' ),
-	loader;
+	yargs = require( 'yargs' );
 
-if ( yargs._.length < 3 ) {
-	throw 'Usage: 3drender <model> <dimensions> <output.png>';
+/**
+ * Converts 3D files to PNG images
+ * @constructor
+ */
+function ThreeDtoPNG( width, height ) {
+	this.width = width;
+	this.height = height;
+	// Create a WebGL context and ask it to keep its rendering buffer
+	this.gl = GL( this.width, this.height, { preserveDrawingBuffer: true } );
+	this.canvas = new Canvas( this.width, this.height );
+	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 1, 5000 );
+	this.renderer = new THREE.WebGLRenderer( { canvas: this.canvas, context: this.gl, antialias: true, preserveDrawingBuffer: true } );
+	this.scene = new THREE.Scene();
 }
 
-var dimensions = yargs._[1].split( 'x' );
+/**
+ * Sets up the Three environment (ambient light, camera, renderer)
+ */
+ThreeDtoPNG.prototype.setupEnvironment = function() {
+	var ambient = new THREE.AmbientLight( 0x999999 ),
+		point = new THREE.PointLight( 0xffffff, 0.4 );
 
-var width = parseInt( dimensions[0] ),
-	height = parseInt( dimensions[1] ),
-	gl = require( 'gl' )( width, height, { preserveDrawingBuffer: true } );
+	this.scene.add( ambient );
 
-if ( isNaN( width ) || isNaN( height ) ) {
-	throw 'Incorrect dimension format, should look like: 640x480';
-}
+	this.camera.add( point );
+	this.scene.add( this.camera );
 
-GLOBAL.THREE = require( 'three' );
-
-var outputToObject = function ( output ) {
-	return output;
+	this.renderer.setSize( this.width, this.height, false );
 };
 
-if ( yargs._[0].toLowerCase().endsWith( '.amf' ) ) {
-	var AMFLoader = require( './AMFLoader' ),
-		textEncoding = require( 'text-encoding' );
+/**
+ * Converts geometry into a mesh with a default material
+ * @param {THREE.BufferGeometry} geometry
+ * @returns {THREE.Mesh} mesh
+ */
+ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
+	var material = new THREE.MeshPhongMaterial( { color: 0xaaaaff, shading: THREE.FlatShading } ),
+	mesh = new THREE.Mesh( geometry, material );
 
-	GLOBAL.TextEncoder = textEncoding.TextEncoder;
-	GLOBAL.TextDecoder = textEncoding.TextDecoder;
-	GLOBAL.DOMParser = require( 'xmldom' ).DOMParser;
+	return mesh;
+};
 
-	loader = new THREE.AMFLoader();
-} else if ( yargs._[0].toLowerCase().endsWith( '.stl' ) ) {
-	var STLLoader = require( './node_modules/three/examples/js/loaders/STLLoader' );
-	loader = new THREE.STLLoader();
-	outputToObject = function ( output ) {
-		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaff, shading: THREE.FlatShading } ),
-			mesh = new THREE.Mesh( output, material );
+/**
+ * Returns the appropriate file loader for a given file
+ * @param {string} filePath Full path to the file
+ * @returns {THREE.Loader} File loader
+ */
+ThreeDtoPNG.prototype.getLoader = function( filePath ) {
+	if ( filePath.toLowerCase().endsWith( '.stl' ) ) {
+		return new STLLoader();
+	}
 
-		return mesh;
-	};
-} else {
-	throw 'Unexpected model file extension, only amf and stl are supported';
-}
+	throw 'Unexpected model file extension, only STL is supported';
+};
 
-var Canvas = require( 'canvas' ),
-	canvas = new Canvas( width, height ),
-	scene = new THREE.Scene(),
-	ambient = new THREE.AmbientLight( 0x999999 );
-
-scene.add( ambient );
-
-var camera = new THREE.PerspectiveCamera( 60, width / height, 1, 5000 );
-camera.up.set( 0, 0, 1 );
-camera.add( new THREE.PointLight( 0xffffff, 0.4 ) );
-scene.add( camera );
-
-var grid = new THREE.GridHelper( 25, 1.0 );
-grid.setColors( 0xffffff, 0x555555 );
-grid.rotateOnAxis( new THREE.Vector3( 1, 0, 0 ), 90 * ( Math.PI/180 ) );
-
-var renderer = new THREE.WebGLRenderer( { canvas: canvas, context: gl, antialias: true, preserveDrawingBuffer: true } );
-renderer.setSize( width, height, false );
-
-function center( object ) {
+/**
+ * Positions the camera relative to an object, at an angle
+ * @param {THREE.Group|THREE.Mesh} object
+ */
+ThreeDtoPNG.prototype.positionCamera = function( object ) {
 	if ( object.type == 'Group' ) {
-		center( object.children[0] );
+		this.positionCamera( object.children[0] );
 	} else if ( object.type == 'Mesh' ) {
 		object.geometry.center();
 		object.geometry.computeBoundingBox();
@@ -81,48 +83,129 @@ function center( object ) {
 		cameray = -bbox_depth;
 		cameraz = bbox_height;
 
-		camera.position.set( camerax, cameray, cameraz );
+		this.camera.position.set( camerax, cameray, cameraz );
 	}
-}
+};
 
-fs.readFile( yargs._[ 0 ], function ( err, data ) {
-	if ( err ) {
-		throw err;
-	}
-
+/**
+ * Adds raw 3D data to the scene
+ * @param {THREE.Loader} loader Data loader to use
+ * @param {Buffer} data Raw 3D data
+ */
+ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
+	// Convert the input data into an array buffer
 	var arrayBuffer = new Uint8Array( data ).buffer;
 
+	// Parse the contents of the input buffer
 	output = loader.parse( arrayBuffer );
 
-	object = outputToObject( output );
+	// Convert what the loader returns into an object we can add to the scene
+	object = this.outputToObject( output );
 
-	center( object );
+	// Position the camera relative to the object
+	// This allows us to look at the object from enough distance and from
+	// an angle
+	this.positionCamera( object );
 
-	scene.add( object );
+	// Add the object to the scene
+	this.scene.add( object );
 
-	camera.lookAt( scene.position );
-	renderer.render( scene, camera );
+	// Flip the camera's up, otherwise it's upside down
+	this.camera.up.set( 0, 0, -1 );
 
-	var pixels = new Uint8Array( width * height * 4 );
-	gl.readPixels( 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels );
+	// Point camera at the scene
+	this.camera.lookAt( this.scene.position );
 
-	// Create new canvas because somehow the gl context is getting the rendering but not the canvas passed earlier
-	var output_canvas = new Canvas( width, height );
-	ctx = output_canvas.getContext( '2d' );
-	imgData = ctx.createImageData( width, height );
+};
+
+/**
+ * Renders the scene
+ */
+ThreeDtoPNG.prototype.render = function() {
+	this.renderer.render( this.scene, this.camera );
+};
+
+/**
+ * Returns a stream to the render canvas
+ * @returns {PNGStream} PNG image stream
+ */
+ThreeDtoPNG.prototype.getCanvasStream = function() {
+	// Prepate a buffer for the rendering image data
+	var pixels = new Uint8Array( this.width * this.height * 4 ),
+		outputCanvas = new Canvas( this.width, this.height ),
+		ctx;
+
+	// Read the pixels from the WebGL buffer into our local buffer
+	this.gl.readPixels( 0, 0, this.width, this.height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels );
+
+	// Create new canvas because somehow the gl context is getting the
+	// rendering but not the canvas passed earlier
+	ctx = outputCanvas.getContext( '2d' );
+	imgData = ctx.createImageData( this.width, this.height );
 	imgData.data.set( pixels );
 	ctx.putImageData( imgData, 0, 0 );
 
-	var rotated_canvas = new Canvas( width, height );
-	rotated_ctx = rotated_canvas.getContext( '2d' );
-	rotated_ctx.scale( 1,-1 );
-	rotated_ctx.translate( 0, -height );
-	rotated_ctx.drawImage( output_canvas, 0, 0 );
+	// Open a read stream from the canvas
+	return outputCanvas.pngStream();
+};
 
-	out = fs.createWriteStream( yargs._[2] );
-	stream = rotated_canvas.pngStream();
+/**
+ * Converts a 3D model file into a PNG image
+ * @param {string} sourcePath Full path to the source 3D model file
+ * @param {string} destinationPath Full path to the destination PNG file
+ * @param {Function} callback Called when conversion is complete
+ */
+ThreeDtoPNG.prototype.convert = function( sourcePath, destinationPath, callback ) {
+	var loader = this.getLoader( sourcePath ),
+		self = this;
 
-	stream.on('data', function( chunk ) {
-		out.write( chunk );
-	});
-});
+	fs.readFile( sourcePath, function ( err, data ) {
+		if ( err ) {
+			throw err;
+		}
+
+		self.addDataToScene( loader, data );
+		self.render();
+
+		stream = self.getCanvasStream();
+
+		// Open a write stream to the destination output file
+		out = fs.createWriteStream( destinationPath );
+
+		// Stream the contents of the canvas into the output stream
+		stream.on( 'data', function( chunk ) {
+			out.write( chunk );
+		} );
+
+		stream.on( 'end', function() {
+			// Reset the scene for future conversions.
+			self.scene = new THREE.Scene();
+			if ( callback ) {
+				callback();
+			}
+		} );
+	} );
+};
+
+exports.ThreeDtoPNG = ThreeDtoPNG;
+
+if ( require.main === module ) {
+	var args = yargs.argv;
+
+	if ( args._.length < 3 ) {
+		throw 'Usage: 3drender <model> <dimensions> <output.png>';
+	}
+
+	var	dimensions = args._[ 1 ].split( 'x' ),
+		width = parseInt( dimensions[0] ),
+		height = parseInt( dimensions[1] );
+
+	if ( isNaN( width ) || isNaN( height ) ) {
+		throw 'Incorrect dimension format, should look like: 640x480';
+	}
+
+	var t = new ThreeDtoPNG( width, height );
+
+	t.setupEnvironment();
+	t.convert( args._[ 0 ], args._[2] );
+}

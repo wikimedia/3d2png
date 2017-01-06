@@ -11,17 +11,25 @@
   ],
   "name": "3d2png",
   "dependencies": {
-    "three": "latest",
-    "gl": "latest",
     "canvas": "latest",
-    "text-encoding": "latest",
-    "xmldom": "latest",
+    "gl": "latest",
+    "three": "latest",
+    "three-stl-loader": "latest",
     "yargs": "latest"
   },
-  "readme": "Converts AMD and STL files into PNG thumbnails",
+  "devDependencies": {
+    "image-ms-ssim": "latest",
+    "mocha": "latest",
+    "node-uuid": "latest",
+    "pngjs": "latest"
+  },
+  "readme": "Converts STL files into PNG thumbnails",
   "repository": {
     "type": "git",
     "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
   },
-  "version": "0.0.1"
+  "scripts": {
+    "test": "node node_modules/mocha/bin/mocha"
+  },
+  "version": "0.0.2"
 }
