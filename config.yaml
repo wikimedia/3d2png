@@ -1,0 +1,6 @@
+# A minimal service-runner configuration file that allows us to
+# use it for building the deploy repository
+services:
+  - name: 3d2png
+    module: ./3d2png.js
+    conf: {}

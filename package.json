@@ -21,7 +21,8 @@
     "image-ms-ssim": "latest",
     "mocha": "latest",
     "node-uuid": "latest",
-    "pngjs": "latest"
+    "pngjs": "latest",
+    "service-runner": "latest"
   },
   "readme": "Converts STL files into PNG thumbnails",
   "repository": {
@@ -29,7 +30,23 @@
     "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
   },
   "scripts": {
-    "test": "node node_modules/mocha/bin/mocha"
+    "test": "node node_modules/mocha/bin/mocha",
+    "build-deploy": "node node_modules/service-runner/service-runner build --deploy-repo --force --verbose"
+  },
+  "deploy": {
+    "node": "6.9.1",
+    "target": "debian",
+    "dependencies": {
+      "debian": [
+        "pkg-config",
+        "libcairo2-dev",
+        "libjpeg-dev",
+        "libxi-dev",
+        "libglu1-mesa-dev",
+        "libglew-dev",
+        "libpng12-dev"
+      ]
+    }
   },
   "version": "0.0.2"
 }
