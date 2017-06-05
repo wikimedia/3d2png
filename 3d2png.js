@@ -110,8 +110,7 @@ ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 	// Add the object to the scene
 	this.scene.add( object );
 
-	// Flip the camera's up, otherwise it's upside down
-	this.camera.up.set( 0, 0, -1 );
+	this.camera.up.set( 0, 0, 1 );
 
 	// Point camera at the scene
 	this.camera.lookAt( this.scene.position );
@@ -145,8 +144,31 @@ ThreeDtoPNG.prototype.getCanvasStream = function() {
 	imgData.data.set( pixels );
 	ctx.putImageData( imgData, 0, 0 );
 
+	// gl.readPixels starts reading left-bottom instead of left-top,
+	// so everything will be flipped & we need to un-flip the image
+	outputCanvas = this.flip( outputCanvas );
+
 	// Open a read stream from the canvas
 	return outputCanvas.pngStream();
+};
+
+/**
+ * Flips canvas over Y axis
+ * @param {Canvas} canvas
+ * @returns {Canvas}
+ */
+ThreeDtoPNG.prototype.flip = function( canvas ) {
+	var flipped = new Canvas( this.width, this.height ),
+		ctx = flipped.getContext( '2d' );
+
+	ctx.globalCompositeOperation = 'copy';
+	ctx.scale( 1, -1 );
+	ctx.translate( 0, -imgData.height );
+	ctx.drawImage( canvas, 0, 0 );
+	ctx.setTransform( 1, 0, 0, 1, 0, 0 );
+	ctx.globalCompositeOperation = 'source-over';
+
+	return ctx.canvas;
 };
 
 /**
