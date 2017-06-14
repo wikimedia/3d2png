@@ -11,11 +11,11 @@
   ],
   "name": "3d2png",
   "dependencies": {
-    "canvas": "latest",
-    "gl": "latest",
-    "three": "latest",
-    "three-stl-loader": "latest",
-    "yargs": "latest"
+    "canvas": "1.6.5",
+    "gl": "4.0.3",
+    "three": "0.85.2",
+    "three-stl-loader": "1.0.5",
+    "yargs": "8.0.2"
   },
   "devDependencies": {
     "image-ms-ssim": "latest",
