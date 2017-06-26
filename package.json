@@ -42,6 +42,7 @@
         "libcairo2-dev",
         "libjpeg-dev",
         "libxi-dev",
+        "libgif-dev",
         "libglu1-mesa-dev",
         "libglew-dev",
         "libpng12-dev"
