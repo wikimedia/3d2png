@@ -3,10 +3,11 @@
 var Canvas = require( 'canvas' ),
 	THREE = require( 'three' ),
 	GL = require( 'gl' ),
-	ThreeSTLLoader = require( 'three-stl-loader' ),
-	STLLoader = ThreeSTLLoader( THREE ),
 	fs = require( 'fs' ),
 	yargs = require( 'yargs' );
+
+// Add THREE.STLLoader
+require( 'three-stl-loader' )( THREE );
 
 /**
  * Converts 3D files to PNG images
@@ -57,7 +58,7 @@ ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
  */
 ThreeDtoPNG.prototype.getLoader = function( filePath ) {
 	if ( filePath.toLowerCase().endsWith( '.stl' ) ) {
-		return new STLLoader();
+		return new THREE.STLLoader();
 	}
 
 	throw 'Unexpected model file extension, only STL is supported';
