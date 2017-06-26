@@ -5,7 +5,7 @@ describe( 'STL', function() {
 		msssim = require( 'image-ms-ssim' ),
 		fs = require( 'fs' ),
 		PNG = require( 'pngjs' ).PNG,
-		uuid = require( 'node-uuid' ),
+		uuid = require( 'uuid' ),
 		filename = uuid.v4() + '.png',
 		images = [];
 

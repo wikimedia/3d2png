@@ -20,7 +20,7 @@
   "devDependencies": {
     "image-ms-ssim": "latest",
     "mocha": "latest",
-    "node-uuid": "latest",
+    "uuid": "latest",
     "pngjs": "latest",
     "service-runner": "latest"
   },
