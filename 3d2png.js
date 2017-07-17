@@ -28,15 +28,20 @@ function ThreeDtoPNG( width, height ) {
  * Sets up the Three environment (ambient light, camera, renderer)
  */
 ThreeDtoPNG.prototype.setupEnvironment = function() {
-	var ambient = new THREE.AmbientLight( 0x999999 ),
+	var ambient = new THREE.AmbientLight( 0x666666 ),
+		dlight = new THREE.DirectionalLight( 0x999999 ),
 		point = new THREE.PointLight( 0xffffff, 0.4 );
 
-	this.scene.add( ambient );
+	dlight.position.set( 0, 0, 1 );
+	dlight.castShadow = true;
 
+	this.scene.add( ambient );
+	this.scene.add( dlight );
 	this.camera.add( point );
 	this.scene.add( this.camera );
 
 	this.renderer.setSize( this.width, this.height, false );
+	this.renderer.setClearColor( 0x222222 );
 };
 
 /**
@@ -45,8 +50,11 @@ ThreeDtoPNG.prototype.setupEnvironment = function() {
  * @returns {THREE.Mesh} mesh
  */
 ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
-	var material = new THREE.MeshPhongMaterial( { color: 0xaaaaff, shading: THREE.FlatShading } ),
-	mesh = new THREE.Mesh( geometry, material );
+	var materials = [
+			new THREE.MeshPhongMaterial( { color: 0xF8F9FA, shading: THREE.FlatShading } ),
+			new THREE.MeshBasicMaterial( { color: 0xC8CCD1, shading: THREE.FlatShading, wireframe: true, transparent: true } )
+		],
+		mesh = new THREE.SceneUtils.createMultiMaterialObject( geometry, materials );
 
 	return mesh;
 };
@@ -102,6 +110,8 @@ ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 
 	// Convert what the loader returns into an object we can add to the scene
 	object = this.outputToObject( output );
+
+	object.castShadow = true;
 
 	// Position the camera relative to the object
 	// This allows us to look at the object from enough distance and from
