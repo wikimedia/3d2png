@@ -50,13 +50,9 @@ ThreeDtoPNG.prototype.setupEnvironment = function() {
  * @returns {THREE.Mesh} mesh
  */
 ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
-	var materials = [
-			new THREE.MeshPhongMaterial( { color: 0xF8F9FA, shading: THREE.FlatShading } ),
-			new THREE.MeshBasicMaterial( { color: 0xC8CCD1, shading: THREE.FlatShading, wireframe: true, transparent: true } )
-		],
-		mesh = new THREE.SceneUtils.createMultiMaterialObject( geometry, materials );
+	var material = new THREE.MeshPhongMaterial( { color: 0xF8F9FA, shading: THREE.FlatShading } );
 
-	return mesh;
+	return new THREE.Mesh( geometry, material );
 };
 
 /**
