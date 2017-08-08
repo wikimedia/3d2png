@@ -64,12 +64,10 @@ ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
  * @param {string} filePath Full path to the file
  * @returns {THREE.Loader} File loader
  */
-ThreeDtoPNG.prototype.getLoader = function( filePath ) {
-	if ( filePath.toLowerCase().endsWith( '.stl' ) ) {
-		return new THREE.STLLoader();
-	}
-
-	throw 'Unexpected model file extension, only STL is supported';
+ThreeDtoPNG.prototype.getLoader = function() {
+	// TODO XXX if more file formats are supported later, need a command line option
+	// to signify the expected format of the input file.
+	return new THREE.STLLoader();
 };
 
 /**
