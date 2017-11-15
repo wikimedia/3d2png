@@ -70,23 +70,28 @@ ThreeDtoPNG.prototype.getLoader = function() {
  * Positions the camera relative to an object, at an angle
  * @param {THREE.Group|THREE.Mesh} object
  */
-ThreeDtoPNG.prototype.positionCamera = function( object ) {
+ThreeDtoPNG.prototype.center = function( object ) {
+	var radius;
+
 	if ( object.type == 'Group' ) {
-		this.positionCamera( object.children[0] );
+		this.center( object.children[ 0 ] );
 	} else if ( object.type == 'Mesh' ) {
 		object.geometry.center();
-		object.geometry.computeBoundingBox();
-		bbox = object.geometry.boundingBox;
+		object.geometry.computeBoundingSphere();
 
-		bbox_width = bbox.max.x - bbox.min.x;
-		bbox_height = bbox.max.z - bbox.min.z;
-		bbox_depth = bbox.max.y - bbox.min.y;
+		radius = object.geometry.boundingSphere.radius;
 
-		camerax = -bbox_width;
-		cameray = -bbox_depth;
-		cameraz = bbox_height;
-
-		this.camera.position.set( camerax, cameray, cameraz );
+		// `radius` is the edge of the object's sphere
+		// We want to position our camera outside of that sphere.
+		// We'll move `radius` (or more) in all directions (x, y, z), so that we're
+		// looking at the object somewhat diagonally, which should always show something
+		// useful (instead of possibly an uninteresting side or top...)
+		// The exact position of the camera was arbitrarily decided by what looked
+		// alright-ish for a few files I was testing with.
+		// sketchfab.com has this at ( 0, -distance, 0 )
+		// viewstl.com has this at ( 0, 0 distance )
+		// openjscad.org has this at ( 0, -distance, distance )
+		this.camera.position.set( radius * 1.5, -radius * 1.5, radius );
 	}
 };
 
@@ -110,7 +115,7 @@ ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 	// Position the camera relative to the object
 	// This allows us to look at the object from enough distance and from
 	// an angle
-	this.positionCamera( object );
+	this.center( object );
 
 	// Add the object to the scene
 	this.scene.add( object );
