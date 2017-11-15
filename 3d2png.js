@@ -28,20 +28,26 @@ function ThreeDtoPNG( width, height ) {
  * Sets up the Three environment (ambient light, camera, renderer)
  */
 ThreeDtoPNG.prototype.setupEnvironment = function() {
-	var ambient = new THREE.AmbientLight( 0x666666 ),
-		dlight = new THREE.DirectionalLight( 0x999999 ),
-		point = new THREE.PointLight( 0xffffff, 0.4 );
+	var light;
 
-	dlight.position.set( 0, 0, 1 );
-	dlight.castShadow = true;
+	this.renderer.setClearColor( 0x222222 );
+	this.renderer.setSize( this.width, this.height, false );
+	this.renderer.shadowMap.enabled = true;
 
-	this.scene.add( ambient );
-	this.scene.add( dlight );
-	this.camera.add( point );
+	this.camera.up.set( 0, 0, 1 );
+	this.camera.add( new THREE.PointLight( 0xffffff, 0.3 ) );
+
+	this.scene.add( new THREE.AmbientLight( 0x666666, 0.5 ) );
 	this.scene.add( this.camera );
 
-	this.renderer.setSize( this.width, this.height, false );
-	this.renderer.setClearColor( 0x222222 );
+	light = new THREE.SpotLight( 0x999999, 1 );
+	light.position.set( -100, 50, 25 );
+	light.castShadow = true;
+	light.shadow.mapSize.width = 4096;
+	light.shadow.mapSize.height = 4096;
+	this.camera.add( light );
+
+	this.render();
 };
 
 /**
@@ -50,7 +56,7 @@ ThreeDtoPNG.prototype.setupEnvironment = function() {
  * @returns {THREE.Mesh} mesh
  */
 ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
-	var material = new THREE.MeshPhongMaterial( { color: 0xF8F9FA, shading: THREE.FlatShading } );
+	var material = new THREE.MeshPhongMaterial( { color: 0xc3bdae, shininess: 10, flatShading: true } );
 
 	return new THREE.Mesh( geometry, material );
 };
@@ -102,15 +108,14 @@ ThreeDtoPNG.prototype.center = function( object ) {
  */
 ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 	// Convert the input data into an array buffer
-	var arrayBuffer = new Uint8Array( data ).buffer;
-
-	// Parse the contents of the input buffer
-	output = loader.parse( arrayBuffer );
-
-	// Convert what the loader returns into an object we can add to the scene
-	object = this.outputToObject( output );
+	var arrayBuffer = new Uint8Array( data ).buffer,
+		// Parse the contents of the input buffer
+		output = loader.parse( arrayBuffer ),
+		// Convert what the loader returns into an object we can add to the scene
+		object = this.outputToObject( output );
 
 	object.castShadow = true;
+	object.receiveShadow = true;
 
 	// Position the camera relative to the object
 	// This allows us to look at the object from enough distance and from
@@ -120,11 +125,8 @@ ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 	// Add the object to the scene
 	this.scene.add( object );
 
-	this.camera.up.set( 0, 0, 1 );
-
 	// Point camera at the scene
 	this.camera.lookAt( this.scene.position );
-
 };
 
 /**
