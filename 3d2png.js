@@ -19,7 +19,7 @@ function ThreeDtoPNG( width, height ) {
 	// Create a WebGL context and ask it to keep its rendering buffer
 	this.gl = GL( this.width, this.height, { preserveDrawingBuffer: true } );
 	this.canvas = new Canvas( this.width, this.height );
-	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 1, 5000 );
+	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 1, 500000 );
 	this.renderer = new THREE.WebGLRenderer( { canvas: this.canvas, context: this.gl, antialias: true, preserveDrawingBuffer: true } );
 	this.scene = new THREE.Scene();
 }
