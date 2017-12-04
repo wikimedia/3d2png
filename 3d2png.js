@@ -4,10 +4,8 @@ var Canvas = require( 'canvas' ),
 	THREE = require( 'three' ),
 	GL = require( 'gl' ),
 	fs = require( 'fs' ),
-	yargs = require( 'yargs' );
-
-// Add THREE.STLLoader
-require( 'three-stl-loader' )( THREE );
+	yargs = require( 'yargs' ),
+	STLLoader = require( 'three-stl-loader' )( THREE );
 
 /**
  * Converts 3D files to PNG images
@@ -69,7 +67,7 @@ ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
 ThreeDtoPNG.prototype.getLoader = function() {
 	// TODO XXX if more file formats are supported later, need a command line option
 	// to signify the expected format of the input file.
-	return new THREE.STLLoader();
+	return new STLLoader();
 };
 
 /**
