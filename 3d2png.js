@@ -95,7 +95,8 @@ ThreeDtoPNG.prototype.center = function( object ) {
 		// sketchfab.com has this at ( 0, -distance, 0 )
 		// viewstl.com has this at ( 0, 0 distance )
 		// openjscad.org has this at ( 0, -distance, distance )
-		this.camera.position.set( radius * 1.5, -radius * 1.5, radius );
+		// thingiverse.com has this at ( -distance, -distance, distance )
+		this.camera.position.set( -radius * 1.5, -radius * 1.5, radius );
 	}
 };
 
