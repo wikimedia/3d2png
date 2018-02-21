@@ -213,9 +213,13 @@ ThreeDtoPNG.prototype.convert = function( sourcePath, destinationPath, callback 
 		stream.on( 'end', function() {
 			// Reset the scene for future conversions.
 			self.scene = new THREE.Scene();
-			if ( callback ) {
-				callback();
-			}
+
+			// Close the output stream.
+			out.end( function() {
+				if ( callback ) {
+					callback();
+				}
+			});
 		} );
 	} );
 };
