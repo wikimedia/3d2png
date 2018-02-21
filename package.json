@@ -30,7 +30,7 @@
     "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
   },
   "scripts": {
-    "test": "node node_modules/mocha/bin/mocha",
+    "test": "if test `uname -s` = 'Linux'; then xvfb-run -a -s '-ac -screen 0 1280x1024x24' node node_modules/mocha/bin/mocha; else node node_modules/mocha/bin/mocha; fi",
     "build-deploy": "node node_modules/service-runner/service-runner build --deploy-repo --force --verbose"
   },
   "deploy": {
@@ -45,7 +45,11 @@
         "libgif-dev",
         "libglu1-mesa-dev",
         "libglew-dev",
-        "libpng12-dev"
+        "libpng12-dev",
+        "xvfb",
+        "xauth",
+        "libgl1-mesa-dri",
+        "libgl1-mesa-glx"
       ]
     }
   },
