@@ -36,7 +36,7 @@ describe( 'STL', function() {
 	}
 
 	after( function() {
-		fs.unlink( './' + filename );
+		fs.unlinkSync( './' + filename );
 	} );
 
 	it( 'Converts to PNG correctly', function( done ) {
