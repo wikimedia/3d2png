@@ -48,14 +48,36 @@ describe( 'STL', function() {
 			loadImages( './' + filename, './samples/DavidStatue.png', function( images ) {
 				var score = msssim.compare( images[0], images[1] );
 
-				assert( score.msssim > 0.99, 'MS-SSIM below threshold' );
-				assert( score.ssim > 0.99, 'SSIM below threshold' );
+				assert( score.msssim > 0.99, 'MS-SSIM below threshold (David)' );
+				assert( score.ssim > 0.99, 'SSIM below threshold (David)' );
 
+				images.splice(0);
 				done();
 			} );
 		}
 
 		t.setupEnvironment();
 		t.convert( './samples/DavidStatue.stl', './' + filename, conversionDone );
+	} );
+
+	it( 'Converts to PNG correctly with reversed faces', function( done ) {
+		this.timeout( 10000 );
+
+		var t = new threed.ThreeDtoPNG( 640, 480 );
+
+		function conversionDone() {
+			loadImages( './' + filename, './samples/Half_Torus.png', function( images ) {
+				var score = msssim.compare( images[0], images[1] );
+
+				assert( score.msssim > 0.99, 'MS-SSIM below threshold (Torus)' );
+				assert( score.ssim > 0.99, 'SSIM below threshold (Torus)' );
+
+				images.splice(0);
+				done();
+			} );
+		}
+
+		t.setupEnvironment();
+		t.convert( './samples/Half_Torus.stl', './' + filename, conversionDone );
 	} );
 } );
