@@ -20,7 +20,7 @@ function ThreeDtoPNG( width, height ) {
 		throw new Error( 'Unable to initialize WebGL' );
 	}
 	this.canvas = new Canvas( this.width, this.height );
-	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 1, 500000 );
+	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 0.001, 500000 );
 	this.renderer = new THREE.WebGLRenderer( { canvas: this.canvas, context: this.gl, antialias: true, preserveDrawingBuffer: true } );
 	this.scene = new THREE.Scene();
 }

@@ -80,4 +80,27 @@ describe( 'STL', function() {
 		t.setupEnvironment();
 		t.convert( './samples/Half_Torus.stl', './' + filename, conversionDone );
 	} );
+
+
+	it( 'Converts to PNG correctly with close-up model', function( done ) {
+		this.timeout( 10000 );
+
+		var t = new threed.ThreeDtoPNG( 640, 480 );
+
+		function conversionDone() {
+			loadImages( './' + filename, './samples/High_quality_skull.png', function( images ) {
+				var score = msssim.compare( images[0], images[1] );
+
+				assert( score.msssim > 0.99, 'MS-SSIM below threshold (Skull)' );
+				assert( score.ssim > 0.99, 'SSIM below threshold (Skull)' );
+
+				images.splice(0);
+				done();
+			} );
+		}
+
+		t.setupEnvironment();
+		t.convert( './samples/High_quality_skull.stl', './' + filename, conversionDone );
+	} );
+
 } );
