@@ -5,7 +5,12 @@ var Canvas = require( 'canvas' ),
 	GL = require( 'gl' ),
 	fs = require( 'fs' ),
 	yargs = require( 'yargs' ),
-	STLLoader = require( 'three-stl-loader' )( THREE );
+	STLLoader = require( './three-stl-loader.js' )( THREE ),
+	polyfills = require( './polyfills.js' );
+
+for (item in polyfills) {
+	global[item] = polyfills[item];
+}
 
 /**
  * Converts 3D files to PNG images
