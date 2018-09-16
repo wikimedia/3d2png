@@ -12,7 +12,7 @@
   "name": "3d2png",
   "dependencies": {
     "canvas": "1.6.5",
-    "gl": "4.0.3",
+    "gl": "4.0.4",
     "three": "0.88.0",
     "yargs": "8.0.2"
   },
