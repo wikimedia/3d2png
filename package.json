@@ -34,7 +34,7 @@
   },
   "deploy": {
     "node": "6.9.1",
-    "target": "debian",
+    "target": "debian:stretch",
     "dependencies": {
       "debian": [
         "pkg-config",
@@ -44,7 +44,7 @@
         "libgif-dev",
         "libglu1-mesa-dev",
         "libglew-dev",
-        "libpng12-dev",
+        "libpng-dev",
         "xvfb",
         "xauth",
         "libgl1-mesa-dri",
