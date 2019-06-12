@@ -3,27 +3,24 @@
 Simple thumbnail generator for AMF and STL files. It tries to pick a reasonable
 camera position based on the bounding box of the geometry.
 
-## How to build 3d2png-deploy
+## Building and testing with Blubber
 
-The deploy repository needs to be built on a system as similar to the
-production hosts as possible. For this reason, we use the service-runner
-package, which spins up a Docker container based on the definition
-provided in the `deploy` stanza of package.json, installs the
-distribution packages needed, builds the node_modules directory and
-updates the source repo submodule.
+`.pipeline/blubber.yaml` gives you a container that matches how this code
+runs in production via Thumbor.
+Building the container requires Docker with BuildKit
 
-To that end, this commit adds the deployment definition to package.json
-and service-runner as a development dependency (which means it will not
-get installed into the deploy repository). There is also a minimal
-config.yaml file that is needed by service-runner in order to build the
-deploy repository.
+There are two variants:
 
-Note that in order for the build process to work you need Docker set up
-on the machine, as well as configure git to point to the location of the
-deploy repository:
+- `test` runs the test suite, same as `npm test`.
+- `dev` runs 3d2png itself, for converting a file by hand.
 
-    $ git config deploy.dir /full/path/to/deploy/repo
+To run the tests:
 
-The build process can then be initiated with
+    $ docker build -f .pipeline/blubber.yaml --target test -t 3d2png-test .
+    $ docker run --rm 3d2png-test
 
-    $ npm run build-deploy
+To convert a model file, mount the current directory into the container so
+it can read your input file and write the output PNG back out:
+
+    $ docker build -f .pipeline/blubber.yaml --target dev -t 3d2png-dev .
+    $ docker run --rm -v "$(pwd):/data" 3d2png-dev /data/samples/Half_Torus.stl 320x240 /data/thumbnail.png

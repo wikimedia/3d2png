@@ -20,8 +20,7 @@
     "image-ms-ssim": "latest",
     "mocha": "latest",
     "uuid": "^9.0.1",
-    "pngjs": "latest",
-    "service-runner": "latest"
+    "pngjs": "latest"
   },
   "readme": "Converts STL files into PNG thumbnails",
   "repository": {
@@ -29,28 +28,7 @@
     "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
   },
   "scripts": {
-    "test": "if test `uname -s` = 'Linux'; then xvfb-run -a -s '-ac -screen 0 1280x1024x24' node node_modules/mocha/bin/mocha; else node node_modules/mocha/bin/mocha; fi",
-    "build-deploy": "node node_modules/service-runner/service-runner build --deploy-repo --force --verbose"
-  },
-  "deploy": {
-    "node": "12.22.12",
-    "target": "debian:bullseye",
-    "dependencies": {
-      "debian": [
-        "pkg-config",
-        "libcairo2-dev",
-        "libjpeg-dev",
-        "libxi-dev",
-        "libgif-dev",
-        "libglu1-mesa-dev",
-        "libglew-dev",
-        "libpng-dev",
-        "xvfb",
-        "xauth",
-        "libgl1-mesa-dri",
-        "libgl1-mesa-glx"
-      ]
-    }
+    "test": "if test `uname -s` = 'Linux'; then xvfb-run -a -s '-ac -screen 0 1280x1024x24' node node_modules/mocha/bin/mocha; else node node_modules/mocha/bin/mocha; fi"
   },
   "version": "0.0.2"
 }

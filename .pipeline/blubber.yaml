@@ -1,0 +1,51 @@
+# syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v1.8.0
+version: v4
+
+# 3d2png isn't deployed as a standalone service (see operations/software/
+# thumbor-plugins, which clones this repo's master and runs it directly),
+# so this isn't a production image definition - it only needs to support
+# `npm test`. The base image matches what thumbor-plugins uses in
+# production:
+# https://gerrit.wikimedia.org/g/operations/software/thumbor-plugins/+/master/.pipeline/blubber.yaml
+base: docker-registry.wikimedia.org/python3-build-bookworm
+
+apt:
+  packages:
+    - nodejs
+    - npm
+    - build-essential
+    - pkg-config
+    - libcairo2-dev
+    - libjpeg-dev
+    - libpango1.0-dev
+    - libxi-dev
+    - libgif-dev
+    - libglu1-mesa-dev
+    - libglew-dev
+    - libx11-dev
+    - xvfb
+    - xauth
+    - python-is-python3
+    - tini
+
+lives:
+  in: /srv/service
+
+variants:
+  dev:
+    builders:
+      - node:
+          requirements: [package.json, package-lock.json]
+          env: dev
+    copies: [local]
+    entrypoint: [tini, --, xvfb-run, -a, -s, "-ac -screen 0 1280x1024x24", node, 3d2png.js]
+    runs:
+      insecurely: true
+  test:
+    builders:
+      - node:
+          requirements: [package.json, package-lock.json]
+    copies: [local]
+    entrypoint: [npm, test]
+    runs:
+      insecurely: true
