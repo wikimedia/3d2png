@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-var Canvas = require( 'canvas' ),
-	THREE = require( 'three' ),
+var THREE = require( 'three' ),
 	GL = require( 'gl' ),
 	fs = require( 'fs' ),
 	yargs = require( 'yargs' ),
 	STLLoader = require( './three-stl-loader.js' )( THREE ),
 	polyfills = require( './polyfills.js' );
+
+const { createCanvas, Canvas } = require('canvas')
 
 for (item in polyfills) {
 	global[item] = polyfills[item];
@@ -24,7 +25,7 @@ function ThreeDtoPNG( width, height ) {
 	if ( !this.gl ) {
 		throw new Error( 'Unable to initialize WebGL' );
 	}
-	this.canvas = new Canvas( this.width, this.height );
+	this.canvas = createCanvas(this.width, this.height);
 	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 0.001, 500000 );
 	this.renderer = new THREE.WebGLRenderer( { canvas: this.canvas, context: this.gl, antialias: true, preserveDrawingBuffer: true } );
 	this.scene = new THREE.Scene();
@@ -150,7 +151,7 @@ ThreeDtoPNG.prototype.render = function() {
 ThreeDtoPNG.prototype.getCanvasStream = function() {
 	// Prepate a buffer for the rendering image data
 	var pixels = new Uint8Array( this.width * this.height * 4 ),
-		outputCanvas = new Canvas( this.width, this.height ),
+		outputCanvas = createCanvas(this.width, this.height),
 		ctx;
 
 	// Read the pixels from the WebGL buffer into our local buffer
@@ -177,7 +178,7 @@ ThreeDtoPNG.prototype.getCanvasStream = function() {
  * @returns {Canvas}
  */
 ThreeDtoPNG.prototype.flip = function( canvas ) {
-	var flipped = new Canvas( this.width, this.height ),
+	var flipped = createCanvas( this.width, this.height ),
 		ctx = flipped.getContext( '2d' );
 
 	ctx.globalCompositeOperation = 'copy';

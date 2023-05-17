@@ -11,8 +11,8 @@
   ],
   "name": "3d2png",
   "dependencies": {
-    "canvas": "1.6.5",
-    "gl": "4.0.4",
+    "canvas": "2.11.2",
+    "gl": "4.9.2",
     "three": "0.88.0",
     "yargs": "8.0.2"
   },
@@ -33,8 +33,8 @@
     "build-deploy": "node node_modules/service-runner/service-runner build --deploy-repo --force --verbose"
   },
   "deploy": {
-    "node": "6.9.1",
-    "target": "debian:stretch",
+    "node": "12.22.12",
+    "target": "debian:bullseye",
     "dependencies": {
       "debian": [
         "pkg-config",
