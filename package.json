@@ -11,15 +11,15 @@
   ],
   "name": "3d2png",
   "dependencies": {
-    "canvas": "2.11.2",
-    "gl": "5.0.3",
+    "canvas": "3.2.1",
+    "gl": "8.1.6",
     "three": "0.88.0",
-    "yargs": "8.0.2"
+    "yargs": "17.7.2"
   },
   "devDependencies": {
     "image-ms-ssim": "latest",
     "mocha": "latest",
-    "uuid": "latest",
+    "uuid": "^9.0.1",
     "pngjs": "latest",
     "service-runner": "latest"
   },
