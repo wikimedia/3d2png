@@ -1,0 +1,33 @@
+# In production, 3d2png runs inside operations/software/thumbor-plugins,
+# which installs it via Debian bookworm's apt "nodejs" package (Node 18) on
+# a bookworm-based image (see its .pipeline/blubber.yaml).
+# node:18-bookworm image mirrors this environment pretty closely
+FROM node:18-bookworm
+
+# See the deploy.dependencies section in package.json for the full list.
+RUN apt-get update && apt-get install -y \
+		tini \
+		pkg-config \
+		libcairo2-dev \
+		libjpeg-dev \
+		libxi-dev \
+		libgif-dev \
+		libglu1-mesa-dev \
+		libglew-dev \
+		libpng-dev \
+		xvfb \
+		xauth \
+		libgl1-mesa-dri \
+		python-is-python3 \
+	&& rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Without tini, our entrypoint script runs as PID 1, and xvfb-run hangs
+# forever waiting for a signal that never reaches it in that setup.
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
