@@ -1,12 +1,16 @@
-var assert = require( 'assert' );
+import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
+import { spawnSync } from 'child_process';
+import msssim from 'image-ms-ssim';
+import pngjs from 'pngjs';
+import { v4 as uuidv4 } from 'uuid';
+import { ThreeDtoPNG } from './3d2png.js';
+
+const { PNG } = pngjs;
 
 describe( 'STL', function() {
-	var threed = require( './3d2png' ),
-		msssim = require( 'image-ms-ssim' ),
-		fs = require( 'fs' ),
-		PNG = require( 'pngjs' ).PNG,
-		uuid = require( 'uuid' ),
-		filename = uuid.v4() + '.png',
+	const filename = uuidv4() + '.png',
 		images = [];
 
 	function loaded( img, callback ) {
@@ -42,11 +46,11 @@ describe( 'STL', function() {
 	it( 'Converts to PNG correctly', function( done ) {
 		this.timeout( 10000 );
 
-		var t = new threed.ThreeDtoPNG( 640, 480 );
+		const t = new ThreeDtoPNG( 640, 480 );
 
 		function conversionDone() {
 			loadImages( './' + filename, './samples/DavidStatue.png', function( images ) {
-				var score = msssim.compare( images[0], images[1] );
+				const score = msssim.compare( images[0], images[1] );
 
 				assert( score.msssim > 0.99, 'MS-SSIM below threshold (David)' );
 				assert( score.ssim > 0.99, 'SSIM below threshold (David)' );
@@ -63,11 +67,11 @@ describe( 'STL', function() {
 	it( 'Converts to PNG correctly with reversed faces', function( done ) {
 		this.timeout( 10000 );
 
-		var t = new threed.ThreeDtoPNG( 640, 480 );
+		const t = new ThreeDtoPNG( 640, 480 );
 
 		function conversionDone() {
 			loadImages( './' + filename, './samples/Half_Torus.png', function( images ) {
-				var score = msssim.compare( images[0], images[1] );
+				const score = msssim.compare( images[0], images[1] );
 
 				assert( score.msssim > 0.99, 'MS-SSIM below threshold (Torus)' );
 				assert( score.ssim > 0.99, 'SSIM below threshold (Torus)' );
@@ -85,11 +89,11 @@ describe( 'STL', function() {
 	it( 'Converts to PNG correctly with close-up model', function( done ) {
 		this.timeout( 10000 );
 
-		var t = new threed.ThreeDtoPNG( 640, 480 );
+		const t = new ThreeDtoPNG( 640, 480 );
 
 		function conversionDone() {
 			loadImages( './' + filename, './samples/High_quality_skull.png', function( images ) {
-				var score = msssim.compare( images[0], images[1] );
+				const score = msssim.compare( images[0], images[1] );
 
 				assert( score.msssim > 0.99, 'MS-SSIM below threshold (Skull)' );
 				assert( score.ssim > 0.99, 'SSIM below threshold (Skull)' );
@@ -103,4 +107,21 @@ describe( 'STL', function() {
 		t.convert( './samples/High_quality_skull.stl', './' + filename, conversionDone );
 	} );
 
+} );
+
+describe( 'CLI entry point', function() {
+	it( 'Still runs when invoked through a symlink', function() {
+		const symlinkPath = './' + uuidv4() + '.js';
+
+		fs.symlinkSync( path.resolve( '3d2png.js' ), symlinkPath );
+
+		try {
+			const result = spawnSync( 'node', [ symlinkPath ] );
+
+			assert.strictEqual( result.status, 1 );
+			assert( /Usage:/.test( result.stderr.toString() ), 'CLI entry point did not run when invoked via a symlink' );
+		} finally {
+			fs.unlinkSync( symlinkPath );
+		}
+	} );
 } );

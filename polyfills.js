@@ -1,20 +1,6 @@
-function TextDecoder( encoding, options ) {
-	this.encoding = encoding || 'utf-8';
-}
+import { Canvas } from 'canvas';
 
-TextDecoder.prototype.decode = function ( buffer ) {
-	return new Buffer( buffer ).toString( this.encoding );
-}
-
-module.exports = {
-	window: {
-		addEventListener: function ( eventName, callback ) {
-			// dummy
-		},
-		removeEventListener: function ( eventName, callback ) {
-			// dummy
-		},
-		TextDecoder: TextDecoder
-	},
-	TextDecoder: TextDecoder
-};
+// node-canvas has no DOM event API, but three's WebGLRenderer registers
+// listeners on the canvas. Stub them as we don't need them.
+Canvas.prototype.addEventListener = () => {};
+Canvas.prototype.removeEventListener = () => {};

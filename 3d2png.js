@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
-var THREE = require( 'three' ),
-	GL = require( 'gl' ),
-	fs = require( 'fs' ),
-	yargs = require( 'yargs' ),
-	STLLoader = require( './three-stl-loader.js' )( THREE ),
-	polyfills = require( './polyfills.js' );
-
-const { createCanvas, Canvas } = require('canvas')
-
-for (item in polyfills) {
-	global[item] = polyfills[item];
-}
+import * as THREE from 'three';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import GL from 'gl';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { createCanvas } from 'canvas';
+import './polyfills.js';
 
 /**
  * Converts 3D files to PNG images
@@ -20,13 +15,17 @@ for (item in polyfills) {
 function ThreeDtoPNG( width, height ) {
 	this.width = width;
 	this.height = height;
+
 	// Create a WebGL context and ask it to keep its rendering buffer
 	this.gl = GL( this.width, this.height, { preserveDrawingBuffer: true } );
 	if ( !this.gl ) {
 		throw new Error( 'Unable to initialize WebGL' );
 	}
-	this.canvas = createCanvas(this.width, this.height);
-	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 0.001, 500000 );
+
+	this.canvas = createCanvas( this.width, this.height );
+
+	// Near/far values are based on the scale normalization done in center()
+	this.camera = new THREE.PerspectiveCamera( 60, this.width / this.height, 0.5, 500 );
 	this.renderer = new THREE.WebGLRenderer( { canvas: this.canvas, context: this.gl, antialias: true, preserveDrawingBuffer: true } );
 	this.scene = new THREE.Scene();
 }
@@ -35,24 +34,44 @@ function ThreeDtoPNG( width, height ) {
  * Sets up the Three environment (ambient light, camera, renderer)
  */
 ThreeDtoPNG.prototype.setupEnvironment = function() {
-	var light;
-
 	this.renderer.setClearColor( 0x222222 );
 	this.renderer.setSize( this.width, this.height, false );
 	this.renderer.shadowMap.enabled = true;
+	this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 	this.camera.up.set( 0, 0, 1 );
-	this.camera.add( new THREE.PointLight( 0xffffff, 0.3 ) );
-
-	this.scene.add( new THREE.AmbientLight( 0x666666, 0.5 ) );
 	this.scene.add( this.camera );
 
-	light = new THREE.SpotLight( 0x999999, 1 );
-	light.position.set( -100, 50, 25 );
-	light.castShadow = true;
-	light.shadow.mapSize.width = 4096;
-	light.shadow.mapSize.height = 4096;
-	this.camera.add( light );
+	// Lights setup
+	this.scene.add( new THREE.AmbientLight( 0xfff4e0, 0.3 ) );
+
+	// Main light, with the only one casting shadows.
+	const keyLight = new THREE.DirectionalLight( 0xfff4e0, 1.8 );
+	keyLight.position.set( 15, 20, 15 );
+	keyLight.castShadow = true;
+	keyLight.shadow.mapSize.width = 2048;
+	keyLight.shadow.mapSize.height = 2048;
+	keyLight.shadow.bias = -0.0005;
+	keyLight.shadow.normalBias = 0.1;
+	keyLight.shadow.camera.near = 1;
+	keyLight.shadow.camera.far = 80;
+
+	// These values are based on model radius. See normalization in center().
+	keyLight.shadow.camera.left = -20;
+	keyLight.shadow.camera.right = 20;
+	keyLight.shadow.camera.top = 20;
+	keyLight.shadow.camera.bottom = -20;
+	this.scene.add( keyLight );
+
+	// Fill light
+	const fillLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+	fillLight.position.set( -20, 5, 10 );
+	this.scene.add( fillLight );
+
+	// Rim/back light
+	const rimLight = new THREE.DirectionalLight( 0xffffff, 1.2 );
+	rimLight.position.set( 5, -15, -20 );
+	this.scene.add( rimLight );
 
 	this.render();
 };
@@ -63,7 +82,7 @@ ThreeDtoPNG.prototype.setupEnvironment = function() {
  * @returns {THREE.Mesh} mesh
  */
 ThreeDtoPNG.prototype.outputToObject = function ( geometry ) {
-	var material = new THREE.MeshPhongMaterial( { color: 0xf0ebe8, shininess: 5, flatShading: true, side: THREE.DoubleSide } );
+	const material = new THREE.MeshPhongMaterial( { color: 0xf0ebe8, shininess: 5, flatShading: true, side: THREE.DoubleSide } );
 
 	return new THREE.Mesh( geometry, material );
 };
@@ -84,15 +103,16 @@ ThreeDtoPNG.prototype.getLoader = function() {
  * @param {THREE.Group|THREE.Mesh} object
  */
 ThreeDtoPNG.prototype.center = function( object ) {
-	var radius;
-
 	if ( object.type == 'Group' ) {
 		this.center( object.children[ 0 ] );
 	} else if ( object.type == 'Mesh' ) {
 		object.geometry.center();
 		object.geometry.computeBoundingSphere();
 
-		radius = object.geometry.boundingSphere.radius;
+		const normalizedScale = 10 / object.geometry.boundingSphere.radius;
+		object.scale.setScalar( normalizedScale );
+
+		const radius = object.geometry.boundingSphere.radius * normalizedScale;
 
 		// `radius` is the edge of the object's sphere
 		// We want to position our camera outside of that sphere.
@@ -116,7 +136,7 @@ ThreeDtoPNG.prototype.center = function( object ) {
  */
 ThreeDtoPNG.prototype.addDataToScene = function( loader, data ) {
 	// Convert the input data into an array buffer
-	var arrayBuffer = new Uint8Array( data ).buffer,
+	const arrayBuffer = new Uint8Array( data ).buffer,
 		// Parse the contents of the input buffer
 		output = loader.parse( arrayBuffer ),
 		// Convert what the loader returns into an object we can add to the scene
@@ -150,23 +170,23 @@ ThreeDtoPNG.prototype.render = function() {
  */
 ThreeDtoPNG.prototype.getCanvasStream = function() {
 	// Prepate a buffer for the rendering image data
-	var pixels = new Uint8Array( this.width * this.height * 4 ),
-		outputCanvas = createCanvas(this.width, this.height),
-		ctx;
+	const pixels = new Uint8Array( this.width * this.height * 4 ),
+		renderCanvas = createCanvas( this.width, this.height );
+	let ctx;
 
 	// Read the pixels from the WebGL buffer into our local buffer
 	this.gl.readPixels( 0, 0, this.width, this.height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels );
 
 	// Create new canvas because somehow the gl context is getting the
 	// rendering but not the canvas passed earlier
-	ctx = outputCanvas.getContext( '2d' );
-	imgData = ctx.createImageData( this.width, this.height );
+	ctx = renderCanvas.getContext( '2d' );
+	const imgData = ctx.createImageData( this.width, this.height );
 	imgData.data.set( pixels );
 	ctx.putImageData( imgData, 0, 0 );
 
 	// gl.readPixels starts reading left-bottom instead of left-top,
 	// so everything will be flipped & we need to un-flip the image
-	outputCanvas = this.flip( outputCanvas );
+	const outputCanvas = this.flip( renderCanvas );
 
 	// Open a read stream from the canvas
 	return outputCanvas.pngStream();
@@ -178,12 +198,12 @@ ThreeDtoPNG.prototype.getCanvasStream = function() {
  * @returns {Canvas}
  */
 ThreeDtoPNG.prototype.flip = function( canvas ) {
-	var flipped = createCanvas( this.width, this.height ),
+	const flipped = createCanvas( this.width, this.height ),
 		ctx = flipped.getContext( '2d' );
 
 	ctx.globalCompositeOperation = 'copy';
 	ctx.scale( 1, -1 );
-	ctx.translate( 0, -imgData.height );
+	ctx.translate( 0, -this.height );
 	ctx.drawImage( canvas, 0, 0 );
 	ctx.setTransform( 1, 0, 0, 1, 0, 0 );
 	ctx.globalCompositeOperation = 'source-over';
@@ -198,7 +218,7 @@ ThreeDtoPNG.prototype.flip = function( canvas ) {
  * @param {Function} callback Called when conversion is complete
  */
 ThreeDtoPNG.prototype.convert = function( sourcePath, destinationPath, callback ) {
-	var loader = this.getLoader( sourcePath ),
+	const loader = this.getLoader( sourcePath ),
 		self = this;
 
 	fs.readFile( sourcePath, function ( err, data ) {
@@ -209,10 +229,10 @@ ThreeDtoPNG.prototype.convert = function( sourcePath, destinationPath, callback 
 		self.addDataToScene( loader, data );
 		self.render();
 
-		stream = self.getCanvasStream();
+		const stream = self.getCanvasStream();
 
 		// Open a write stream to the destination output file
-		out = fs.createWriteStream( destinationPath );
+		const out = fs.createWriteStream( destinationPath );
 
 		// Stream the contents of the canvas into the output stream
 		stream.on( 'data', function( chunk ) {
@@ -233,16 +253,17 @@ ThreeDtoPNG.prototype.convert = function( sourcePath, destinationPath, callback 
 	} );
 };
 
-exports.ThreeDtoPNG = ThreeDtoPNG;
+export { ThreeDtoPNG };
 
-if ( require.main === module ) {
-	var args = yargs.argv;
+// Compare realpaths in order to support symlinks
+if ( fs.existsSync( process.argv[ 1 ] ) && fs.realpathSync( process.argv[ 1 ] ) === fileURLToPath( import.meta.url ) ) {
+	const args = process.argv.slice( 2 );
 
-	if ( args._.length < 3 ) {
+	if ( args.length < 3 ) {
 		throw 'Usage: 3drender <model> <dimensions> <output.png>';
 	}
 
-	var	dimensions = args._[ 1 ].split( 'x' ),
+	const dimensions = args[ 1 ].split( 'x' ),
 		width = parseInt( dimensions[0] ),
 		height = parseInt( dimensions[1] );
 
@@ -250,8 +271,8 @@ if ( require.main === module ) {
 		throw 'Incorrect dimension format, should look like: 640x480';
 	}
 
-	var t = new ThreeDtoPNG( width, height );
+	const t = new ThreeDtoPNG( width, height );
 
 	t.setupEnvironment();
-	t.convert( args._[ 0 ], args._[2] );
+	t.convert( args[ 0 ], args[ 2 ] );
 }

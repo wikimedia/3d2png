@@ -10,17 +10,19 @@
     }
   ],
   "name": "3d2png",
+  "type": "module",
   "dependencies": {
-    "canvas": "3.2.1",
-    "gl": "8.1.6",
-    "three": "0.88.0",
-    "yargs": "17.7.2"
+    "canvas": "3.2.3",
+    "gl": "9.0.0-rc.10",
+    "three": "0.162.0"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-wikimedia": "^0.32.5",
     "image-ms-ssim": "latest",
     "mocha": "latest",
-    "uuid": "^9.0.1",
-    "pngjs": "latest"
+    "pngjs": "latest",
+    "uuid": "^9.0.1"
   },
   "readme": "Converts STL files into PNG thumbnails",
   "repository": {
@@ -28,7 +30,8 @@
     "url": "https://phabricator.wikimedia.org/diffusion/TDTP/3d2png.git"
   },
   "scripts": {
-    "test": "if test `uname -s` = 'Linux'; then xvfb-run -a -s '-ac -screen 0 1280x1024x24' node node_modules/mocha/bin/mocha; else node node_modules/mocha/bin/mocha; fi"
+    "test": "if test `uname -s` = 'Linux'; then xvfb-run -a -s '-ac -screen 0 1280x1024x24' node node_modules/mocha/bin/mocha; else node node_modules/mocha/bin/mocha; fi",
+    "lint": "eslint --cache ."
   },
   "version": "0.0.2"
 }
