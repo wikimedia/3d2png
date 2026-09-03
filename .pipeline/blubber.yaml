@@ -7,7 +7,7 @@ version: v4
 # `npm test`. The base image matches what thumbor-plugins uses in
 # production:
 # https://gerrit.wikimedia.org/g/operations/software/thumbor-plugins/+/master/.pipeline/blubber.yaml
-base: docker-registry.wikimedia.org/python3-build-bookworm
+base: docker-registry.wikimedia.org/python3-build-trixie
 
 apt:
   packages:

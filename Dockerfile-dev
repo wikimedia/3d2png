@@ -1,8 +1,8 @@
 # In production, 3d2png runs inside operations/software/thumbor-plugins,
-# which installs it via Debian bookworm's apt "nodejs" package (Node 18) on
-# a bookworm-based image (see its .pipeline/blubber.yaml).
-# node:18-bookworm image mirrors this environment pretty closely
-FROM node:18-bookworm
+# which installs it via Debian trixie's apt "nodejs" package (Node 20) on
+# a trixie-based image (see its .pipeline/blubber.yaml).
+# node:20-trixie image mirrors this environment pretty closely
+FROM node:20-trixie
 
 # See the deploy.dependencies section in package.json for the full list.
 RUN apt-get update && apt-get install -y \
